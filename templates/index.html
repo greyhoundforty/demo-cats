@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Cat Photos - OpenShift Demo</title>
+    
+    <!-- IBM Carbon Design System -->
+    <link rel="stylesheet" href="https://unpkg.com/@carbon/styles@1.59.0/css/styles.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/@carbon/grid@11.22.0/css/grid.min.css">
+    
+    <style>
+        body {
+            background-color: var(--cds-background);
+            color: var(--cds-text-primary);
+            font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .cat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .cat-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            display: block;
+            margin: 2rem auto;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .refresh-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .error-message {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: var(--cds-support-error);
+            color: var(--cds-text-on-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cds--grid">
+        <div class="cds--row">
+            <div class="cds--col-lg-16">
+                <div class="cat-container">
+                    <div class="header">
+                        <h1 class="cds--type-productive-heading-07">Random Cat Photos</h1>
+                        <p class="cds--type-body-long-01">
+                            A delightful OpenShift demo featuring our feline friends
+                        </p>
+                    </div>
+                    
+                    <div class="loading" id="loading">
+                        <div class="cds--loading cds--loading--small"></div>
+                        <p class="cds--type-body-short-01">Fetching a new cat photo...</p>
+                    </div>
+                    
+                    <div class="error-message" id="errorMessage">
+                        <p class="cds--type-body-short-01">
+                            Oops! Couldn't fetch a new cat photo. Please try again.
+                        </p>
+                    </div>
+                    
+                    <img id="catImage" 
+                         src="{{ cat_image_url }}" 
+                         alt="Random cat photo" 
+                         class="cat-image"
+                         onload="hideLoading()"
+                         onerror="showError()">
+                    
+                    <div class="refresh-container">
+                        <button id="refreshBtn" 
+                                class="cds--btn cds--btn--primary" 
+                                onclick="getNewCat()">
+                            <svg class="cds--btn__icon" width="16" height="16" viewBox="0 0 16 16">
+                                <path d="M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7c1.3 0 2.6-.4 3.7-1.1l-.8-1.2C10.2 13.3 9.1 13.7 8 13.7c-3.1 0-5.7-2.5-5.7-5.7S4.9 2.3 8 2.3s5.7 2.5 5.7 5.7h-1.4L14 10l1.7-2h-1.4C14.3 4.6 11.4 1 8 1z"/>
+                            </svg>
+                            Get New Cat
+                        </button>
+                        
+                        <button class="cds--btn cds--btn--secondary" 
+                                onclick="location.reload()">
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getNewCat() {
+            const catImage = document.getElementById('catImage');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            // Show loading state
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            catImage.style.opacity = '0.5';
+            refreshBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/cat');
+                const data = await response.json();
+                
+                if (data.image_url) {
+                    catImage.src = data.image_url;
+                } else {
+                    throw new Error('No image URL received');
+                }
+            } catch (error) {
+                console.error('Error fetching new cat:', error);
+                showError();
+            }
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            const catImage = document.getElementById('catImage');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            loading.style.display = 'none';
+            catImage.style.opacity = '1';
+            refreshBtn.disabled = false;
+        }
+        
+        function showError() {
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const catImage = document.getElementById('catImage');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            loading.style.display = 'none';
+            errorMessage.style.display = 'block';
+            catImage.style.opacity = '1';
+            refreshBtn.disabled = false;
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            hideLoading();
+        });
+    </script>
+</body>
+</html>
